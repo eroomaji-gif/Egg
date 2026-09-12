@@ -332,50 +332,51 @@ end)
 
 
 -- ==========================================
--- 🥚 ระบบค้นหาและวิ่งไปหาไข่พิเศษ / Big ไข่
+-- 🥚 ระบบค้นหาไข่ที่มีเอฟเฟกต์วิบวับ / แสงพิเศษ
 -- ==========================================
 local Workspace = game:GetService("Workspace")
 
-getgenv().EggFarmSpecial_Active = false
-createSwitchButton(ContentContainer, "🥚 วิ่งหาไข่พิเศษ / Big", getgenv().EggFarmSpecial_Active, function(isActive)
-    getgenv().EggFarmSpecial_Active = isActive
+getgenv().EggFarmEffect_Active = false
+createSwitchButton(EggFarmContainer, "🥚 วิ่งหาไข่มีเอฟเฟกต์พิเศษ", getgenv().EggFarmEffect_Active, function(isActive)
+    getgenv().EggFarmEffect_Active = isActive
 end)
 
--- ฟังก์ชันค้นหาและวิ่งไปหาเป้าหมาย
+-- ฟังก์ชันค้นหาวัตถุที่มีเอฟเฟกต์ (Particle หรือ Light)
 task.spawn(function()
     while true do
-        task.wait(1) -- เช็ครอบละ 1 วินาทีเพื่อไม่ให้กินทรัพยากรเครื่อง
+        task.wait(1) -- เช็ครอบละ 1 วินาที
         
-        if getgenv().EggFarmSpecial_Active then
+        if getgenv().EggFarmEffect_Active then
             local char = player.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             
             if hrp then
                 local targetFound = nil
                 
-                -- วนหาวัตถุใน Workspace (ปรับชื่อโฟลเดอร์ตามแมพจริงได้ เช่น Workspace.Eggs)
+                -- วนหาวัตถุทั้งหมดใน Workspace
                 for _, obj in ipairs(Workspace:GetDescendants()) do
                     if obj:IsA("BasePart") or obj:IsA("Model") then
-                        local nameLower = string.lower(obj.Name)
-                        -- เช็คว่ามีคำว่า "พิเศษ", "special", หรือ "big" อยู่ในชื่อไหม
-                        if string.find(nameLower, "พิเศษ") or string.find(nameLower, "special") or string.find(nameLower, "big") then
+                        -- เช็คว่าข้างในมีเอฟเฟกต์ความวิบวับอยู่ไหม (เช่น ParticleEmitter, PointLight, หรือ Highlight)
+                        local hasEffect = obj:FindFirstChildWhichIsA("ParticleEmitter", true) 
+                                       or obj:FindFirstChildWhichIsA("PointLight", true) 
+                                       or obj:FindFirstChildWhichIsA("Highlight", true)
+                        
+                        if hasEffect then
+                            -- กรองชื่อคร่าวๆ หรือเช็คว่าเป็นโมเดลไข่ (ถ้าต้องการเจาะจง)
                             targetFound = obj
                             break
                         end
                     end
                 end
                 
-                -- ถ้าเจอเป้าหมาย ให้พุ่งตัวไปหา
+                -- ถ้าเจอวัตถุที่มีเอฟเฟกต์ ให้พุ่งตัวไปหาทันที
                 if targetFound then
                     local targetPos = targetFound:IsA("Model") and targetFound:GetModelCFrame() or targetFound.CFrame
                     if targetPos then
-                        hrp.CFrame = targetPos + Vector3.new(0, 3, 0) -- วิ่งไปเหนือไข่เล็กน้อย
+                        hrp.CFrame = targetPos + Vector3.new(0, 3, 0) -- วิ่งไปเหนือจุดนั้นเล็กน้อย
                     end
                 end
             end
         end
     end
 end)
-
-
-
