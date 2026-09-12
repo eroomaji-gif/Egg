@@ -289,7 +289,7 @@ createSwitchButton(ContentContainer, "⚡ ฟาร์มไข่", getgenv().E
     getgenv().EggFarm_Active = isActive
     
     if isActive then
-        print("เปิดระบบฟาร์มไข่แล้ว: รอจนกว่าจะเก็บไอเทมสำเร็จจึงจะวาร์ป")
+        print("เปิดระบบฟาร์มไข่แล้ว: รอจนกว่าจะกดเก็บไข่สำเร็จจึงจะวาร์ป")
     else
         print("ปิดระบบฟาร์มไข่")
     end
@@ -297,12 +297,12 @@ end)
 
 local targetPosition = Vector3.new(547.18, 71.13, -365.94)
 
+-- ฟังก์ชันทำงานเมื่อกดเก็บสำเร็จ (วงกลมหมุนครบ)
 local function onItemSelected()
     if not getgenv().EggFarm_Active then return end
 
     print("เก็บไข่สำเร็จ! กำลังดีเลย์ 0.1 วินาทีก่อนวาร์ป...")
     
-    -- หน่วงเวลา 0.1 วินาทีก่อนทำการวาร์ป
     task.wait(0.1)
     
     local player = game.Players.LocalPlayer
@@ -310,9 +310,28 @@ local function onItemSelected()
     
     if character and character:FindFirstChild("HumanoidRootPart") then
         character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
-        print("วาร์ปไปยังพิกัด: 547.18, 71.13, -365.94 เรียบร้อยแล้ว")
+        print("วาร์ปเรียบร้อยแล้ว")
     end
 end
 
--- ตัวอย่างการนำไปผูกกับ Event การเก็บไอเทมจริงในเกมของคุณ
--- itemPrompt.Triggered:Connect(onItemSelected)
+-- คอยดักจับ ProximityPrompt ทุกอันในเกมแบบ Real-time (รวมถึงอันที่เกิดใหม่ด้วย)
+workspace.DescendantAdded:Connect(function(child)
+    if child:IsA("ProximityPrompt") then
+        child.Triggered:Connect(function(playerWhoTriggered)
+            if playerWhoTriggered == game.Players.LocalPlayer then
+                onItemSelected()
+            end
+        end)
+    end
+end)
+
+-- ดักจับ Prompt ที่มีอยู่แล้วในเกมตอนนี้ทั้งหมด
+for _, prompt in ipairs(workspace:GetDescendants()) do
+    if prompt:IsA("ProximityPrompt") then
+        prompt.Triggered:Connect(function(playerWhoTriggered)
+            if playerWhoTriggered == game.Players.LocalPlayer then
+                onItemSelected()
+            end
+        end)
+    end
+end
