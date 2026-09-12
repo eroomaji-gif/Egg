@@ -283,45 +283,52 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 -- ==========================================
--- ⚙️ ระบบวาร์ปไปพิกัดเป้าหมาย 1 ครั้ง เมื่อเก็บไอเทมเข้าตัว
+-- ⚙️ ระบบวาร์ปไปพิกัดเป้าหมาย 1 ครั้ง เมื่อเก็บไอเทมเข้าตัว (เปิดค้างไว้แต่จะไม่ทำงานจนกว่าจะเก็บของ)
 -- ==========================================
 local RunService = game:GetService("RunService")
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
--- สร้างปุ่มสวิตช์สำหรับเปิด-ปิดระบบฟาร์มไข่แบบวาร์ป
+-- สร้างปุ่มสวิตช์สำหรับเปิด-ปิดระบบ
 getgenv().Script1_Active = false
-createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (วาร์ปตอนเก็บ)", getgenv().Script1_Active, function(isActive)
+createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (วาร์ปเมื่อเก็บของ)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
 end)
 
--- ฟังก์ชันเช็คการเก็บของเข้าตัว (ตรวจจับจาก Backpack)
+-- ฟังก์ชันตรวจจับการเก็บไอเทมเข้า Backpack
 local function setupInventoryTrigger()
     local backpack = localPlayer:WaitForChild("Backpack", 5)
     if not backpack then return end
     
-    local lastCount = #backpack:GetChildren()
+    -- เคลียร์การเชื่อมต่อเก่า (ป้องกัน Event ซ้ำซ้อนเวลาตัวละครเกิดใหม่)
+    if _G.BackpackConnection then
+        _G.BackpackConnection:Disconnect()
+    end
     
-    backpack.ChildAdded:Connect(function(child)
+    _G.BackpackConnection = backpack.ChildAdded:Connect(function(child)
+        -- เช็คว่าเปิดสวิตช์อยู่ไหม (ถ้าปิดอยู่ จะไม่ทำอะไรเลยแม้จะเก็บของ)
         if not getgenv().Script1_Active then return end
         
         -- หน่วงเวลา 0.1 วินาทีหลังเก็บของ
         task.wait(0.1)
         
+        -- เช็คสวิตช์อีกรอบกันพลาดขณะรอเวลา
+        if not getgenv().Script1_Active then return end
+        
         local char = localPlayer.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
-                -- ทำการวาร์ปไปที่พิกัดเป้าหมาย 1 ครั้ง
+                -- ทำการวาร์ปไปที่พิกัดเป้าหมาย 1 ครั้ง แล้วปล่อยให้เกมดึงกลับเอง
                 hrp.CFrame = targetCFrame
             end
         end
     end)
 end
 
--- เริ่มต้นรันระบบตรวจจับ Backpack
+-- เริ่มต้นรันระบบตรวจจับครั้งแรก
 task.spawn(setupInventoryTrigger)
 
--- รองรับกรณีตัวละครตายแล้วเกิดใหม่ (Backpack จะถูกสร้างใหม่)
+-- รองรับกรณีตัวละครตายแล้วเกิดใหม่ (Backpack จะถูกรีเซ็ตใหม่)
 localPlayer.CharacterAdded:Connect(function(newChar)
     task.wait(1)
     setupInventoryTrigger()
