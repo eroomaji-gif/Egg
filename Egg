@@ -286,7 +286,7 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 getgenv().Script1_Active = false
-createSwitchButton(ContentContainer, "⚡ วาปฆ่า", getgenv().Script1_Active, function(isActive)
+createSwitchButton(ContentContainer, "🥚 ฟามไข่", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
 end)
 
