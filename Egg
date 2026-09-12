@@ -282,49 +282,47 @@ ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 8)
 
 
-
 -- ==========================================
--- ⚙️ ระบบยื้อพิกัดเซฟโซน (เชื่อมกับปุ่มแคปซูล)
+-- ⚙️ ระบบวาร์ปไปพิกัดเป้าหมาย 1 ครั้ง เมื่อเก็บไอเทมเข้าตัว
 -- ==========================================
 local RunService = game:GetService("RunService")
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
--- สร้างปุ่มสวิตช์แคปซูลสำหรับฟาร์มไข่
+-- สร้างปุ่มสวิตช์สำหรับเปิด-ปิดระบบฟาร์มไข่แบบวาร์ป
 getgenv().Script1_Active = false
-createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่", getgenv().Script1_Active, function(isActive)
+createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (วาร์ปตอนเก็บ)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
-    
-    local char = localPlayer.Character
-    local humanoid = char and char:FindFirstChild("Humanoid")
-    
-    -- ถ้าปิดสวิตช์ ให้คืนค่าสถานะตัวละครปกติ
-    if not isActive and humanoid then
-        pcall(function()
-            humanoid.PlatformStand = false
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-        end)
-    end
 end)
 
--- ระบบทำงานเบื้องหลังผ่าน Heartbeat
-RunService.Heartbeat:Connect(function()
-    if not getgenv().Script1_Active then return end
+-- ฟังก์ชันเช็คการเก็บของเข้าตัว (ตรวจจับจาก Backpack)
+local function setupInventoryTrigger()
+    local backpack = localPlayer:WaitForChild("Backpack", 5)
+    if not backpack then return end
     
-    local char = localPlayer.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
+    local lastCount = #backpack:GetChildren()
     
-    if hrp and humanoid then
-        -- ล็อกพิกัดและหยุดความเร็ว
-        hrp.CFrame = targetCFrame
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    backpack.ChildAdded:Connect(function(child)
+        if not getgenv().Script1_Active then return end
         
-        -- ล็อกสถานะตัวละครไม่ให้ล้ม
-        if humanoid.PlatformStand == false then
-            humanoid.PlatformStand = true
+        -- หน่วงเวลา 0.1 วินาทีหลังเก็บของ
+        task.wait(0.1)
+        
+        local char = localPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- ทำการวาร์ปไปที่พิกัดเป้าหมาย 1 ครั้ง
+                hrp.CFrame = targetCFrame
+            end
         end
-    end
-end)
+    end)
+end
 
+-- เริ่มต้นรันระบบตรวจจับ Backpack
+task.spawn(setupInventoryTrigger)
+
+-- รองรับกรณีตัวละครตายแล้วเกิดใหม่ (Backpack จะถูกสร้างใหม่)
+localPlayer.CharacterAdded:Connect(function(newChar)
+    task.wait(1)
+    setupInventoryTrigger()
+end)
