@@ -256,7 +256,7 @@ CatBtn1.Parent = SidebarFrame
 CatBtn1.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 CatBtn1.Size = UDim2.new(1, 0, 0, 40)
 CatBtn1.Font = Enum.Font.GothamBold
-CatBtn1.Text = "🔪 ฆ่า+วาป"
+CatBtn1.Text = "🥚 ฟามไข่"
 CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 CatBtn1.TextSize = 13
 
@@ -280,6 +280,16 @@ local ContentLayout = Instance.new("UIListLayout")
 ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 8)
+
+
+
+
+
+getgenv().Script1_Active = false
+createSwitchButton(ContentContainer, "⚡ วาปฆ่า", getgenv().Script1_Active, function(isActive)
+    getgenv().Script1_Active = isActive
+end)
+
 
 
 
