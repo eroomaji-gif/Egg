@@ -289,13 +289,13 @@ createSwitchButton(ContentContainer, "⚡ ฟาร์มไข่", getgenv().E
     getgenv().EggFarm_Active = isActive
     
     if isActive then
-        print("เปิดระบบฟาร์มไข่ (ปั่น AI มอนสเตอร์): พร้อมทำงาน")
+        print("เปิดระบบฟาร์มไข่ (ระยะไกลสุดแมพ + โหมดประหยัดเครื่อง): พร้อมทำงาน")
     else
         print("ปิดระบบฟาร์มไข่")
     end
 end)
 
--- พิกัดเป้าหมายที่ต้องการวาร์ปไป (เช่น เขตปลอดภัย)
+-- พิกัดเป้าหมายที่ต้องการวาร์ปไป
 local targetPosition = Vector3.new(547.18, 71.13, -365.94)
 
 local function onEggCollected()
@@ -306,35 +306,18 @@ local function onEggCollected()
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     
     if rootPart then
-        -- บันทึกพิกัดเดิมก่อนวาร์ป (เผื่อต้องการวาร์ปกลับจุดเดิม หรือให้เกมดีดกลับ)
-        local originalPosition = rootPart.CFrame
-        
-        -- ดีเลย์ 0.1 วินาทีหลังกดเก็บสำเร็จ
-        task.wait(0.2)
-        
-        -- 1. วาร์ปไปพิกัดเป้าหมายทันทีเพื่อให้ระบบนับว่าส่งไข่สำเร็จ / AI เอ๋อ
+        task.wait(0.1)
         rootPart.CFrame = CFrame.new(targetPosition)
-        print("วาร์ปไปยังพิกัดเป้าหมายแล้ว! AI มอนสเตอร์น่าจะเริ่มเอ๋อ")
-        
-        -- (ถ้าต้องการให้ดีเลย์แล้ววาร์ปกลับจุดเดิม สามารถเปิดใช้งานบรรทัดด้านล่างนี้ได้ครับ)
-        -- task.wait(0.5)
-        -- rootPart.CFrame = originalPosition
+        print("วาร์ปไปยังพิกัดเป้าหมายแล้ว!")
     end
 end
 
--- ดักจับ ProximityPrompt ตอนกดเก็บไข่
-workspace.DescendantAdded:Connect(function(child)
-    if child:IsA("ProximityPrompt") then
-        child.Triggered:Connect(function(playerWhoTriggered)
-            if playerWhoTriggered == game.Players.LocalPlayer then
-                onEggCollected()
-            end
-        end)
-    end
-end)
-
-for _, prompt in ipairs(workspace:GetDescendants()) do
-    if prompt:IsA("ProximityPrompt") then
+-- ฟังก์ชันผูก ProximityPrompt แบบป้องกันการผูกซ้ำซ้อน
+local connectedPrompts = {}
+local function hookPrompt(prompt)
+    if prompt:IsA("ProximityPrompt") and not connectedPrompts[prompt] then
+        connectedPrompts[prompt] = true
+        
         prompt.Triggered:Connect(function(playerWhoTriggered)
             if playerWhoTriggered == game.Players.LocalPlayer then
                 onEggCollected()
@@ -342,3 +325,26 @@ for _, prompt in ipairs(workspace:GetDescendants()) do
         end)
     end
 end
+
+-- 1. ดักจับ Prompt ใหม่ที่ถูกสร้างขึ้นในแมพทันที (ครอบคลุมทั่วแมพ)
+workspace.DescendantAdded:Connect(hookPrompt)
+
+-- 2. ระบบลูปเช็คแบบถนอมเครื่อง (สำหรับมือถือสเปคต่ำ)
+-- จะทำงานทุกๆ 1.5 วินาที เพื่อกวาดหา Prompt ที่โหลดมาใหม่ โดยไม่กินทรัพยากรเครื่อง
+task.spawn(function()
+    while true do
+        if getgenv().EggFarm_Active then
+            -- ใช้ pcall เพื่อป้องกันโค้ดหยุดทำงานฉุกเฉินถ้ามี Error
+            pcall(function()
+                for _, prompt in ipairs(workspace:GetDescendants()) do
+                    if prompt:IsA("ProximityPrompt") then
+                        hookPrompt(prompt)
+                    end
+                end
+            end)
+        end
+        -- หน่วงเวลา 1.5 วินาที ช่วยให้โทรศัพท์ไม่กิน CPU และไม่ร้อน
+        task.wait(1.5)
+    end
+end)
+
