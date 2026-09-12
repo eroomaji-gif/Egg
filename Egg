@@ -281,25 +281,14 @@ ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 8)
 
-
 -- ==========================================
--- ⚙️ ระบบวาร์ปเฉพาะตอนเก็บของใหม่เข้ากระเป๋า (เปิดทิ้งไว้ได้ ไม่กวนของเก่า)
+-- ⚙️ ระบบวาร์ปแบบเพียวๆ 1 ครั้ง เมื่อมีของใหม่เข้ากระเป๋า (ไม่ยุ่งกับฟิสิกส์ตัวละคร ป้องกันตัวลอย/จมดิน)
 -- ==========================================
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
 getgenv().Script1_Active = false
 createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (วาร์ปเมื่อเก็บของ)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
-    
-    -- เคลียร์สถานะตัวละครให้ปกติทันทีเมื่อปิดปุ่ม
-    local char = localPlayer.Character
-    local humanoid = char and char:FindFirstChild("Humanoid")
-    if not isActive and humanoid then
-        pcall(function()
-            humanoid.PlatformStand = false
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-        end)
-    end
 end)
 
 local function setupInventoryTrigger()
@@ -310,49 +299,34 @@ local function setupInventoryTrigger()
         _G.BackpackConnection:Disconnect()
     end
     
-    -- ใช้ ChildAdded เพื่อดักจับเฉพาะ "ของใหม่" ที่เพิ่งถูกเพิ่มเข้ามาจริงๆ เท่านั้น
+    -- ดักจับเฉพาะตอนที่มีลูกหลาน (ไอเทมชิ้นใหม่) ถูกเพิ่มเข้ามาใน Backpack เท่านั้น
     _G.BackpackConnection = backpack.ChildAdded:Connect(function(child)
         -- ถ้าไม่ได้เปิดสวิตช์ จะไม่ทำอะไรเลย
         if not getgenv().Script1_Active then return end
         
-        -- หน่วงเวลา 0.1 วินาทีหลังของชิ้นใหม่เข้ากระเป๋า
+        -- หน่วงเวลา 0.1 วินาทีตามที่ต้องการ
         task.wait(0.1)
         
+        -- เช็คสวิตช์อีกรอบกันปิดไประหว่างรอ
         if not getgenv().Script1_Active then return end
         
         local char = localPlayer.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
-            local humanoid = char:FindFirstChild("Humanoid")
-            
             if hrp then
-                -- ล็อกตัวชั่วคราวเพื่อกันจมดินตอนวาร์ป
-                if humanoid then
-                    pcall(function()
-                        humanoid.PlatformStand = true
-                    end)
-                end
-                
-                -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง
+                -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้งแบบตรงๆ (ปล่อยให้เกมดึงกลับเองตามธรรมชาติ)
                 hrp.CFrame = targetCFrame
                 hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                
-                -- ปล่อยตัวให้ปกติทันทีหลังวาร์ปเสร็จ
-                task.wait(0.05)
-                if humanoid then
-                    pcall(function()
-                        humanoid.PlatformStand = false
-                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-                    end)
-                end
             end
         end
     end)
 end
 
+-- เริ่มต้นรันระบบตรวจจับ
 task.spawn(setupInventoryTrigger)
 
+-- รองรับกรณีตัวละครตายแล้วเกิดใหม่
 localPlayer.CharacterAdded:Connect(function(newChar)
     task.wait(1)
     setupInventoryTrigger()
