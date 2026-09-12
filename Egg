@@ -285,71 +285,47 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 
-getgenv().Script1_Active = false
-createSwitchButton(ContentContainer, "🥚 ฟามไข่", getgenv().Script1_Active, function(isActive)
-    getgenv().Script1_Active = isActive
-end)
-local Players = game:GetService("Players")
+-- ==========================================
+-- ⚙️ ระบบยื้อพิกัดเซฟโซน (เชื่อมกับปุ่มแคปซูล)
+-- ==========================================
 local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-
--- พิกัดเป้าหมายที่คุณต้องการล็อกตัวไว้
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
-
-local isTugActive = false
-
-btn.MouseButton1Click:Connect(function()
-	isTugActive = not isTugActive
-	
-	local char = player.Character
-	local humanoid = char and char:FindFirstChild("Humanoid")
-	
-	if isTugActive then
-		btn.Text = "ยื้อพิกัดเซฟโซน: ON (หลบรีเซิร์ฟ)"
-		btn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
-	else
-		btn.Text = "ยื้อพิกัดเซฟโซน: OFF"
-		btn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-		
-		-- คืนค่าสถานะปกติ
-		if humanoid then
-			pcall(function()
-				humanoid.PlatformStand = false
-				humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-			end)
-		end
-	end
+-- สร้างปุ่มสวิตช์แคปซูลสำหรับฟาร์มไข่
+getgenv().Script1_Active = false
+createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่", getgenv().Script1_Active, function(isActive)
+    getgenv().Script1_Active = isActive
+    
+    local char = player.Character
+    local humanoid = char and char:FindFirstChild("Humanoid")
+    
+    -- ถ้าปิดสวิตช์ ให้คืนค่าสถานะตัวละครปกติ
+    if not isActive and humanoid then
+        pcall(function()
+            humanoid.PlatformStand = false
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end)
+    end
 end)
 
--- 2. ระบบยื้อพิกัดแบบปลอดภัย (ใช้ Heartbeat และไม่บังคับเปลี่ยน State เป็น Physics พร่ำเพรื่อ)
-local frameCounter = 0
+-- ระบบทำงานเบื้องหลังผ่าน Heartbeat
 RunService.Heartbeat:Connect(function()
-	if not isTugActive then return end
-	
-	local char = player.Character
-	if not char then return end
-	local hrp = char:FindFirstChild("HumanoidRootPart")
-	local humanoid = char:FindFirstChild("Humanoid")
-	
-	if hrp and humanoid then
-		frameCounter = frameCounter + 1
-		
-		-- ล็อกพิกัดแบบเนียนๆ สลับเฟรมเพื่อไม่ให้แอนตี้ชีทรัวรีเซ็ตตัว
-		hrp.CFrame = targetCFrame
-		hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-		hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-		
-		-- ป้องกันไม่ให้ตัวละครล้มพับหรือติดสถานะทรุด
-		if humanoid.PlatformStand == false then
-			humanoid.PlatformStand = true
-		end
-	end
+    if not getgenv().Script1_Active then return end
+    
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChild("Humanoid")
+    
+    if hrp and humanoid then
+        -- ล็อกพิกัดและหยุดความเร็ว
+        hrp.CFrame = targetCFrame
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        
+        -- ล็อกสถานะตัวละครไม่ให้ล้ม
+        if humanoid.PlatformStand == false then
+            humanoid.PlatformStand = true
+        end
+    end
 end)
-
-
-
-
-
-
-
