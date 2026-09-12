@@ -372,18 +372,16 @@ ESPLayout.Parent = ESPContainer
 ESPLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ESPLayout.Padding = UDim.new(0, 8)
 
--- ==========================================
--- 🔄 ผูกคำสั่งกดสลับหน้าจอของปุ่ม ESP
--- ==========================================
-CatESP.MouseButton1Click:Connect(function()
-    -- ซ่อนหน้าต่างอื่นทั้งหมด
-    if typeof(ContentContainer) ~= "undefined" then ContentContainer.Visible = false end
-    if typeof(EggFarmContainer) ~= "undefined" then EggFarmContainer.Visible = false end
-    
-    -- แสดงเฉพาะหน้าต่าง ESP
-    ESPContainer.Visible = true
-end)
 
+
+
+-- ==========================================
+-- 🔄 ผูกคำสั่งกดสลับหน้าจอของปุ่มแรก (หมวดหมู่ 1)
+-- ==========================================
+CatBtn1.MouseButton1Click:Connect(function()
+    ContentContainer.Visible = true    -- แสดงหน้าแรก (ฟาร์มไข่)
+    if typeof(ESPContainer) ~= "undefined" then ESPContainer.Visible = false end -- ซ่อนหน้า ESP
+end)
 
 
 
