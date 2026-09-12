@@ -285,7 +285,7 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 getgenv().EggFarm_Active = false
 
-createSwitchButton(ContentContainer, "⚡ ฟาร์มไข่", getgenv().EggFarm_Active, function(isActive)
+createSwitchButton(ContentContainer, "⚡ ฟาร์ไข่", getgenv().EggFarm_Active, function(isActive)
     getgenv().EggFarm_Active = isActive
     
     if isActive then
