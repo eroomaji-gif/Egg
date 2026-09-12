@@ -288,7 +288,6 @@ ContentLayout.Padding = UDim.new(0, 8)
 getgenv().Script1_Active = false
 createSwitchButton(ContentContainer, "🥚 ฟามไข่", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
-end)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
