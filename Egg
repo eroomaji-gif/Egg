@@ -285,48 +285,75 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 -- ==========================================
--- ⚙️ ระบบดักจับการกดเก็บ (ProximityPrompt / Interaction) วาร์ป 1 ครั้งแล้วปิดตัวเอง
+-- ⚙️ ระบบเช็คของที่ถือในมือ (ยกเว้นอาวุธ) วาร์ป 1 ครั้งแล้วปิดสวิตช์
 -- ==========================================
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
 getgenv().Script1_Active = false
-local switchBtn
-
-switchBtn = createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (กดเก็บแล้ววาร์ปครั้งเดียว)", getgenv().Script1_Active, function(isActive)
+createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (หยิบของในมือแล้ววาร์ป)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
 end)
 
 local isProcessing = false
 
-local function triggerTeleportOnce()
-    if isProcessing then return end
-    isProcessing = true
-    
-    -- หน่วงเวลา 0.1 วินาทีตามที่ขอ
-    task.wait(0.1)
-    
-    local char = localPlayer.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง
-            hrp.CFrame = targetCFrame
-            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+-- รายชื่อคำที่บ่งบอกว่าเป็น "อาวุธ" ให้ยกเว้นไม่ต้องเอามาคิด (สามารถเพิ่มชื่ออาวุธในเกมลงในตารางนี้ได้)
+local weaponKeywords = {"sword", "gun", "blade", "weapon", "pistol", "rifle", "ดาบ", "ปืน", "อาวุธ"}
+
+local function isWeapon(toolName)
+    local lowerName = string.lower(toolName)
+    for _, keyword in ipairs(weaponKeywords) do
+        if string.find(lowerName, keyword) then
+            return true
         end
     end
-    
-    -- ปิดสวิตช์การทำงานทันที (จบการทำงาน 1 รอบ)
-    getgenv().Script1_Active = false
-    
-    -- หน่วงสั้นๆ ค่อยปลดล็อคให้กดรอบใหม่ได้
-    task.wait(0.5)
-    isProcessing = false
+    return false
 end
 
--- ดักจับการกด ProximityPrompt (ปุ่ม E หรือกดเก็บของในแมพ) ทั่วทั้งเกม
-game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, playerWhoTriggered)
-    if playerWhoTriggered == localPlayer and getgenv().Script1_Active then
-        triggerTeleportOnce()
-    end
+local function setupHandCheck()
+    local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    
+    -- ดักจับเวลาที่มี Tool (ไอเทม) ถูกหยิบขึ้นมาถือในตัวละคร
+    char.ChildAdded:Connect(function(child)
+        if not getgenv().Script1_Active or isProcessing then return end
+        
+        -- เช็คว่าเป็น Tool หรือไอเทมที่ถือได้หรือไม่
+        if child:IsA("Tool") then
+            local toolName = child.Name
+            
+            -- ถ้าไม่ใช่ "อาวุธ" (แปลว่าเป็นไข่หรือของอย่างอื่นที่หยิบจับ)
+            if not isWeapon(toolName) then
+                isProcessing = true
+                
+                -- ปิดสวิตช์ทันที (ทำงานรอบเดียวจบตามต้องการ)
+                getgenv().Script1_Active = false
+                
+                -- หน่วงเวลา 0.1 วินาที
+                task.wait(0.1)
+                
+                local currentCharacter = localPlayer.Character
+                if currentCharacter then
+                    local hrp = currentCharacter:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง
+                        hrp.CFrame = targetCFrame
+                        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+                
+                task.wait(1)
+                isProcessing = false
+            end
+        end
+    end)
+end
+
+-- เริ่มรันระบบเช็ค
+task.spawn(setupHandCheck)
+
+-- รองรับกรณีตัวละครตายแล้วเกิดใหม่
+localPlayer.CharacterAdded:Connect(function(newChar)
+    task.wait(1)
+    isProcessing = false
+    setupHandCheck()
 end)
