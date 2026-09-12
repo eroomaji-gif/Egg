@@ -310,41 +310,78 @@ end)
 
 
 
+-- ==========================================
+-- 📂 เพิ่มหมวดหมู่ "ฟาร์ม" และปุ่มสวิตช์แคปซูล
+-- ==========================================
 
--- ปุ่มหมวดหมู่ที่ 1 (ฝั่งซ้าย: หมวดหมู่ฆาตกร)
-local CatBtn1 = Instance.new("TextButton")
-CatBtn1.Name = "Category1"
-CatBtn1.Parent = SidebarFrame
-CatBtn1.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-CatBtn1.Size = UDim2.new(1, 0, 0, 40)
-CatBtn1.Font = Enum.Font.GothamBold
-CatBtn1.Text = "🔪 ฆ่า+วาป"
-CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
-CatBtn1.TextSize = 13
+-- 1. ปุ่มหมวดหมู่ "ฟาร์ม" ใน Sidebar ฝั่งซ้าย
+local CatBtn3 = Instance.new("TextButton")
+CatBtn3.Name = "Category3"
+CatBtn3.Parent = SidebarFrame
+CatBtn3.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+CatBtn3.Size = UDim2.new(1, 0, 0, 40)
+CatBtn3.Font = Enum.Font.GothamBold
+CatBtn3.Text = "🌾 ฟาร์ม"
+CatBtn3.TextColor3 = Color3.fromRGB(255, 255, 255)
+CatBtn3.TextSize = 13
 
-local CatCorner1 = Instance.new("UICorner")
-CatCorner1.CornerRadius = UDim.new(0, 6)
-CatCorner1.Parent = CatBtn1
+local CatCorner3 = Instance.new("UICorner")
+CatCorner3.CornerRadius = UDim.new(0, 6)
+CatCorner3.Parent = CatBtn3
 
+-- 2. พื้นที่แสดงผลฝั่งขวาสำหรับหมวดหมู่ "ฟาร์ม" (ซ่อนไว้ก่อน)
+local FarmContainer = Instance.new("ScrollingFrame")
+FarmContainer.Name = "FarmContainer"
+FarmContainer.Parent = MainFrame
+FarmContainer.BackgroundTransparency = 1
+FarmContainer.Position = UDim2.new(0, 160, 0, 50)
+FarmContainer.Size = UDim2.new(1, -170, 1, -60)
+FarmContainer.CanvasSize = UDim2.new(0, 0, 0, 600)
+FarmContainer.ScrollBarThickness = 6
+FarmContainer.Visible = false -- ซ่อนไว้เริ่มต้น
 
--- 3.2 พื้นที่แสดงปุ่มฟังก์ชันฝั่งขวา (Container สำหรับหมวดหมู่ฆาตกร)
-local ContentContainer = Instance.new("ScrollingFrame")
-ContentContainer.Name = "ContentContainer"
-ContentContainer.Parent = MainFrame
-ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 160, 0, 50)
-ContentContainer.Size = UDim2.new(1, -170, 1, -60)
-ContentContainer.CanvasSize = UDim2.new(0, 0, 0, 600)
-ContentContainer.ScrollBarThickness = 6
-ContentContainer.Visible = true -- เปิดหน้าต่างนี้เป็นค่าเริ่มต้น
+local FarmLayout = Instance.new("UIListLayout")
+FarmLayout.Parent = FarmContainer
+FarmLayout.SortOrder = Enum.SortOrder.LayoutOrder
+FarmLayout.Padding = UDim.new(0, 8)
 
-local ContentLayout = Instance.new("UIListLayout")
-ContentLayout.Parent = ContentContainer
-ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim.new(0, 8)
+-- 3. ตัวอย่างการสร้างปุ่มสวิตช์แคปซูลในหน้าฟาร์ม (ปล่อยโล่ง/รอใส่โค้ดฟังก์ชันทีหลัง)
+createSwitchButton(FarmContainer, "ระบบฟาร์มหุ่นยนต์ (ตัวอย่าง)", false, function(state)
+    if state then
+        -- โค้ดเมื่อเปิดใช้งานฟาร์ม
+        print("เปิดฟาร์ม")
+    else
+        -- โค้ดเมื่อปิดใช้งานฟาร์ม
+        print("ปิดฟาร์ม")
+    end
+end)
 
+createSwitchButton(FarmContainer, "ระบบออโต้คลิก (ตัวอย่าง)", false, function(state)
+    if state then
+        -- โค้ดเมื่อเปิดใช้งาน
+    else
+        -- โค้ดเมื่อปิดใช้งาน
+    end
+end)
 
+-- ==========================================
+-- 🔄 อัปเดตระบบกดสลับหน้าจอ (รวมหน้าฟาร์มเข้าไปด้วย)
+-- ==========================================
 
+-- สมมติว่ามี ContentContainer (หน้าแรก), InfoContainer (หน้าข้อมูล), และ FarmContainer (หน้าฟาร์ม)
+CatBtn1.MouseButton1Click:Connect(function()
+    ContentContainer.Visible = true
+    -- InfoContainer.Visible = false (ถ้ามี)
+    FarmContainer.Visible = false
+end)
+
+-- (ถ้ามีปุ่มข้อมูล ให้ใส่ซ่อน FarmContainer ตรงนี้ด้วย)
+
+CatBtn3.MouseButton1Click:Connect(function()
+    ContentContainer.Visible = false
+    -- InfoContainer.Visible = false (ถ้ามี)
+    FarmContainer.Visible = true -- แสดงหน้าฟาร์ม
+end)
 
 
 
