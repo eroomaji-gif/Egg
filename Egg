@@ -287,58 +287,45 @@ getgenv().EggFarm_Active = false
 
 createSwitchButton(ContentContainer, "⚡ ฟาร์มไข่", getgenv().EggFarm_Active, function(isActive)
     getgenv().EggFarm_Active = isActive
-    
     if isActive then
-        print("เปิดระบบฟาร์มไข่ (ปั่น AI มอนสเตอร์): พร้อมทำงาน")
+        print("เปิดระบบฟาร์มไข่แล้ว!")
     else
         print("ปิดระบบฟาร์มไข่")
     end
 end)
 
--- พิกัดเป้าหมายที่ต้องการวาร์ปไป (เช่น เขตปลอดภัย)
 local targetPosition = Vector3.new(547.18, 71.13, -365.94)
 
 local function onEggCollected()
     if not getgenv().EggFarm_Active then return end
 
+    -- ดีเลย์สั้นมากๆ (0.05 วิ) เพื่อให้เกมบันทึกการเก็บทันทีแล้ววาร์ปหนีมอน
+    task.wait(0.60)
+    
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     
     if rootPart then
-        -- บันทึกพิกัดเดิมก่อนวาร์ป (เผื่อต้องการวาร์ปกลับจุดเดิม หรือให้เกมดีดกลับ)
-        local originalPosition = rootPart.CFrame
-        
-        -- ดีเลย์ 0.1 วินาทีหลังกดเก็บสำเร็จ
-        task.wait(0.10)
-        
-        -- 1. วาร์ปไปพิกัดเป้าหมายทันทีเพื่อให้ระบบนับว่าส่งไข่สำเร็จ / AI เอ๋อ
         rootPart.CFrame = CFrame.new(targetPosition)
-        print("วาร์ปไปยังพิกัดเป้าหมายแล้ว! AI มอนสเตอร์น่าจะเริ่มเอ๋อ")
-        
-        -- (ถ้าต้องการให้ดีเลย์แล้ววาร์ปกลับจุดเดิม สามารถเปิดใช้งานบรรทัดด้านล่างนี้ได้ครับ)
-        -- task.wait(0.5)
-        -- rootPart.CFrame = originalPosition
     end
 end
 
--- ดักจับ ProximityPrompt ตอนกดเก็บไข่
-workspace.DescendantAdded:Connect(function(child)
-    if child:IsA("ProximityPrompt") then
-        child.Triggered:Connect(function(playerWhoTriggered)
-            if playerWhoTriggered == game.Players.LocalPlayer then
-                onEggCollected()
-            end
-        end)
-    end
-end)
-
-for _, prompt in ipairs(workspace:GetDescendants()) do
+-- ดักจับ ProximityPrompt แบบรวดเร็ว
+local function hookPrompt(prompt)
     if prompt:IsA("ProximityPrompt") then
+        -- ถ้าอยากให้กดเก็บไวขึ้นโดยไม่ต้องรอนาน สามารถสั่งลดเวลา HoldDuration ตรงนี้ได้เลย (เช่น ปรับเป็น 0)
+        -- prompt.HoldDuration = 0 
+        
         prompt.Triggered:Connect(function(playerWhoTriggered)
             if playerWhoTriggered == game.Players.LocalPlayer then
                 onEggCollected()
             end
         end)
     end
+end
+
+workspace.DescendantAdded:Connect(hookPrompt)
+for _, prompt in ipairs(workspace:GetDescendants()) do
+    hookPrompt(prompt)
 end
