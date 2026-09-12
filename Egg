@@ -285,58 +285,48 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 -- ==========================================
--- ⚙️ ระบบวาร์ป 1 ครั้งเมื่อกดเก็บไอเทมสำเร็จ (แล้วปิดการทำงานทันที)
+-- ⚙️ ระบบดักจับการกดเก็บ (ProximityPrompt / Interaction) วาร์ป 1 ครั้งแล้วปิดตัวเอง
 -- ==========================================
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
 getgenv().Script1_Active = false
-local switchButton
+local switchBtn
 
-switchButton = createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (กดเก็บแล้ววาร์ป 1 ครั้ง)", getgenv().Script1_Active, function(isActive)
+switchBtn = createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (กดเก็บแล้ววาร์ปครั้งเดียว)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
 end)
 
-local function setupInventoryTrigger()
-    local backpack = localPlayer:WaitForChild("Backpack", 5)
-    if not backpack then return end
+local isProcessing = false
+
+local function triggerTeleportOnce()
+    if isProcessing then return end
+    isProcessing = true
     
-    if _G.BackpackConnection then
-        _G.BackpackConnection:Disconnect()
+    -- หน่วงเวลา 0.1 วินาทีตามที่ขอ
+    task.wait(0.1)
+    
+    local char = localPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง
+            hrp.CFrame = targetCFrame
+            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        end
     end
     
-    -- ดักจับเฉพาะตอนที่มีไอเทมใหม่เพิ่มเข้ามาใน Backpack (แปลว่ากดเก็บสำเร็จแล้ว)
-    _G.BackpackConnection = backpack.ChildAdded:Connect(function(child)
-        -- ถ้าไม่ได้เปิดสวิตช์อยู่ ให้ข้ามทันที
-        if not getgenv().Script1_Active then return end
-        
-        -- ปิดการทำงานทันที (เพื่อให้ทำงานแค่ครั้งเดียวตามที่ต้องการ)
-        getgenv().Script1_Active = false
-        
-        -- อัปเดตหน้าตาปุ่มสวิตช์ให้เป็นสถานะปิด (ถ้าหาตัวจับภาพสวิตช์เจอ)
-        pcall(function()
-            local knobTrack = switchButton:FindFirstChildOfClass("Frame") or switchButton.Parent:FindFirstChild("Frame")
-            -- ถ้าฟังก์ชันสร้างปุ่มของคุณคืนค่า SwitchFrame ออกมา ปุ่มจะอัปเดตสถานะเองไม่ได้โดยตรงผ่าน callback นอก ให้ใช้วิธีสั่งเคลียร์ค่าผ่านเงื่อนไขด้านบนแทน
-        end)
-        
-        -- หน่วงเวลา 0.1 วินาทีตามที่ขอ
-        task.wait(0.1)
-        
-        local char = localPlayer.Character
-        if char then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                -- ทำการวาร์ปไปที่พิกัดเป้าหมาย 1 ครั้ง (จากนั้นปล่อยให้เกมดึงตัวกลับเองและบั๊กไปตามธรรมชาติ)
-                hrp.CFrame = targetCFrame
-                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            end
-        end
-    end)
+    -- ปิดสวิตช์การทำงานทันที (จบการทำงาน 1 รอบ)
+    getgenv().Script1_Active = false
+    
+    -- หน่วงสั้นๆ ค่อยปลดล็อคให้กดรอบใหม่ได้
+    task.wait(0.5)
+    isProcessing = false
 end
 
-task.spawn(setupInventoryTrigger)
-
-localPlayer.CharacterAdded:Connect(function(newChar)
-    task.wait(1)
-    setupInventoryTrigger()
+-- ดักจับการกด ProximityPrompt (ปุ่ม E หรือกดเก็บของในแมพ) ทั่วทั้งเกม
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, playerWhoTriggered)
+    if playerWhoTriggered == localPlayer and getgenv().Script1_Active then
+        triggerTeleportOnce()
+    end
 end)
