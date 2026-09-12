@@ -285,52 +285,59 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 getgenv().EggFarm_Active = false
 
-createSwitchButton(ContentContainer, "⚡ ฟาร์ไข่", getgenv().EggFarm_Active, function(isActive)
+createSwitchButton(ContentContainer, "⚡ ฟาร์มไข่", getgenv().EggFarm_Active, function(isActive)
     getgenv().EggFarm_Active = isActive
     
     if isActive then
-        print("เปิดระบบฟาร์มไข่แล้ว: รอจนกว่าจะกดเก็บไข่สำเร็จจึงจะวาร์ป")
+        print("เปิดระบบฟาร์มไข่ (ปั่น AI มอนสเตอร์): พร้อมทำงาน")
     else
         print("ปิดระบบฟาร์มไข่")
     end
 end)
 
+-- พิกัดเป้าหมายที่ต้องการวาร์ปไป (เช่น เขตปลอดภัย)
 local targetPosition = Vector3.new(547.18, 71.13, -365.94)
 
--- ฟังก์ชันทำงานเมื่อกดเก็บสำเร็จ (วงกลมหมุนครบ)
-local function onItemSelected()
+local function onEggCollected()
     if not getgenv().EggFarm_Active then return end
 
-    print("เก็บไข่สำเร็จ! กำลังดีเลย์ 0.1 วินาทีก่อนวาร์ป...")
-    
-    task.wait(0.1)
-    
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
-        print("วาร์ปเรียบร้อยแล้ว")
+    if rootPart then
+        -- บันทึกพิกัดเดิมก่อนวาร์ป (เผื่อต้องการวาร์ปกลับจุดเดิม หรือให้เกมดีดกลับ)
+        local originalPosition = rootPart.CFrame
+        
+        -- ดีเลย์ 0.1 วินาทีหลังกดเก็บสำเร็จ
+        task.wait(0.1)
+        
+        -- 1. วาร์ปไปพิกัดเป้าหมายทันทีเพื่อให้ระบบนับว่าส่งไข่สำเร็จ / AI เอ๋อ
+        rootPart.CFrame = CFrame.new(targetPosition)
+        print("วาร์ปไปยังพิกัดเป้าหมายแล้ว! AI มอนสเตอร์น่าจะเริ่มเอ๋อ")
+        
+        -- (ถ้าต้องการให้ดีเลย์แล้ววาร์ปกลับจุดเดิม สามารถเปิดใช้งานบรรทัดด้านล่างนี้ได้ครับ)
+        -- task.wait(0.5)
+        -- rootPart.CFrame = originalPosition
     end
 end
 
--- คอยดักจับ ProximityPrompt ทุกอันในเกมแบบ Real-time (รวมถึงอันที่เกิดใหม่ด้วย)
+-- ดักจับ ProximityPrompt ตอนกดเก็บไข่
 workspace.DescendantAdded:Connect(function(child)
     if child:IsA("ProximityPrompt") then
         child.Triggered:Connect(function(playerWhoTriggered)
             if playerWhoTriggered == game.Players.LocalPlayer then
-                onItemSelected()
+                onEggCollected()
             end
         end)
     end
 end)
 
--- ดักจับ Prompt ที่มีอยู่แล้วในเกมตอนนี้ทั้งหมด
 for _, prompt in ipairs(workspace:GetDescendants()) do
     if prompt:IsA("ProximityPrompt") then
         prompt.Triggered:Connect(function(playerWhoTriggered)
             if playerWhoTriggered == game.Players.LocalPlayer then
-                onItemSelected()
+                onEggCollected()
             end
         end)
     end
