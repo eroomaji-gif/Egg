@@ -331,6 +331,51 @@ RunService.Heartbeat:Connect(function()
 end)
 
 
+-- ==========================================
+-- 🥚 ระบบค้นหาและวิ่งไปหาไข่พิเศษ / Big ไข่
+-- ==========================================
+local Workspace = game:GetService("Workspace")
+
+getgenv().EggFarmSpecial_Active = false
+createSwitchButton(ContentContainer, "🥚 วิ่งหาไข่พิเศษ / Big", getgenv().EggFarmSpecial_Active, function(isActive)
+    getgenv().EggFarmSpecial_Active = isActive
+end)
+
+-- ฟังก์ชันค้นหาและวิ่งไปหาเป้าหมาย
+task.spawn(function()
+    while true do
+        task.wait(1) -- เช็ครอบละ 1 วินาทีเพื่อไม่ให้กินทรัพยากรเครื่อง
+        
+        if getgenv().EggFarmSpecial_Active then
+            local char = player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            
+            if hrp then
+                local targetFound = nil
+                
+                -- วนหาวัตถุใน Workspace (ปรับชื่อโฟลเดอร์ตามแมพจริงได้ เช่น Workspace.Eggs)
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if obj:IsA("BasePart") or obj:IsA("Model") then
+                        local nameLower = string.lower(obj.Name)
+                        -- เช็คว่ามีคำว่า "พิเศษ", "special", หรือ "big" อยู่ในชื่อไหม
+                        if string.find(nameLower, "พิเศษ") or string.find(nameLower, "special") or string.find(nameLower, "big") then
+                            targetFound = obj
+                            break
+                        end
+                    end
+                end
+                
+                -- ถ้าเจอเป้าหมาย ให้พุ่งตัวไปหา
+                if targetFound then
+                    local targetPos = targetFound:IsA("Model") and targetFound:GetModelCFrame() or targetFound.CFrame
+                    if targetPos then
+                        hrp.CFrame = targetPos + Vector3.new(0, 3, 0) -- วิ่งไปเหนือไข่เล็กน้อย
+                    end
+                end
+            end
+        end
+    end
+end)
 
 
 
