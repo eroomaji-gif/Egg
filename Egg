@@ -310,7 +310,7 @@ local function onEggCollected()
         local originalPosition = rootPart.CFrame
         
         -- ดีเลย์ 0.1 วินาทีหลังกดเก็บสำเร็จ
-        task.wait(0.1)
+        task.wait(0.60)
         
         -- 1. วาร์ปไปพิกัดเป้าหมายทันทีเพื่อให้ระบบนับว่าส่งไข่สำเร็จ / AI เอ๋อ
         rootPart.CFrame = CFrame.new(targetPosition)
