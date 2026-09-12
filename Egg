@@ -281,13 +281,18 @@ ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 8)
 
+
+
+
 -- ==========================================
--- ⚙️ ระบบวาร์ปแบบเพียวๆ 1 ครั้ง เมื่อมีของใหม่เข้ากระเป๋า (ไม่ยุ่งกับฟิสิกส์ตัวละคร ป้องกันตัวลอย/จมดิน)
+-- ⚙️ ระบบวาร์ป 1 ครั้งเมื่อกดเก็บไอเทมสำเร็จ (แล้วปิดการทำงานทันที)
 -- ==========================================
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
 getgenv().Script1_Active = false
-createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (วาร์ปเมื่อเก็บของ)", getgenv().Script1_Active, function(isActive)
+local switchButton
+
+switchButton = createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (กดเก็บแล้ววาร์ป 1 ครั้ง)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
 end)
 
@@ -299,22 +304,28 @@ local function setupInventoryTrigger()
         _G.BackpackConnection:Disconnect()
     end
     
-    -- ดักจับเฉพาะตอนที่มีลูกหลาน (ไอเทมชิ้นใหม่) ถูกเพิ่มเข้ามาใน Backpack เท่านั้น
+    -- ดักจับเฉพาะตอนที่มีไอเทมใหม่เพิ่มเข้ามาใน Backpack (แปลว่ากดเก็บสำเร็จแล้ว)
     _G.BackpackConnection = backpack.ChildAdded:Connect(function(child)
-        -- ถ้าไม่ได้เปิดสวิตช์ จะไม่ทำอะไรเลย
+        -- ถ้าไม่ได้เปิดสวิตช์อยู่ ให้ข้ามทันที
         if not getgenv().Script1_Active then return end
         
-        -- หน่วงเวลา 0.1 วินาทีตามที่ต้องการ
+        -- ปิดการทำงานทันที (เพื่อให้ทำงานแค่ครั้งเดียวตามที่ต้องการ)
+        getgenv().Script1_Active = false
+        
+        -- อัปเดตหน้าตาปุ่มสวิตช์ให้เป็นสถานะปิด (ถ้าหาตัวจับภาพสวิตช์เจอ)
+        pcall(function()
+            local knobTrack = switchButton:FindFirstChildOfClass("Frame") or switchButton.Parent:FindFirstChild("Frame")
+            -- ถ้าฟังก์ชันสร้างปุ่มของคุณคืนค่า SwitchFrame ออกมา ปุ่มจะอัปเดตสถานะเองไม่ได้โดยตรงผ่าน callback นอก ให้ใช้วิธีสั่งเคลียร์ค่าผ่านเงื่อนไขด้านบนแทน
+        end)
+        
+        -- หน่วงเวลา 0.1 วินาทีตามที่ขอ
         task.wait(0.1)
-        
-        -- เช็คสวิตช์อีกรอบกันปิดไประหว่างรอ
-        if not getgenv().Script1_Active then return end
         
         local char = localPlayer.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
-                -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้งแบบตรงๆ (ปล่อยให้เกมดึงกลับเองตามธรรมชาติ)
+                -- ทำการวาร์ปไปที่พิกัดเป้าหมาย 1 ครั้ง (จากนั้นปล่อยให้เกมดึงตัวกลับเองและบั๊กไปตามธรรมชาติ)
                 hrp.CFrame = targetCFrame
                 hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -323,10 +334,8 @@ local function setupInventoryTrigger()
     end)
 end
 
--- เริ่มต้นรันระบบตรวจจับ
 task.spawn(setupInventoryTrigger)
 
--- รองรับกรณีตัวละครตายแล้วเกิดใหม่
 localPlayer.CharacterAdded:Connect(function(newChar)
     task.wait(1)
     setupInventoryTrigger()
