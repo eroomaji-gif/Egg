@@ -283,43 +283,36 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 
--- ==========================================
--- 🥚 ระบบฟาร์มไข่ (เปิดรอนิ่งๆ กดเก็บปึ๊บ หน่วง 0.1 วิ วาร์ป 1 ครั้งแล้วปิดตัวเอง)
--- ==========================================
-local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
+getgenv().EggFarm_Active = false
 
-getgenv().Script1_Active = false
-
-createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่ (กดเก็บแล้ววาร์ปครั้งเดียว)", getgenv().Script1_Active, function(state)
-    getgenv().Script1_Active = state
-end)
-
-local isProcessing = false
-
--- ดักจับการกดปุ่มเก็บของ (ProximityPrompt) ในเกม
-game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, playerWhoTriggered)
-    -- ถ้าเปิดสวิตช์อยู่ และเป็นตัวเราเองที่กดเก็บ และระบบไม่ได้กำลังทำงานอยู่
-    if getgenv().Script1_Active and playerWhoTriggered == localPlayer and not isProcessing then
-        isProcessing = true
-        
-        -- ปิดสวิตช์ทันที (ทำงานรอบเดียวจบ)
-        getgenv().Script1_Active = false
-        
-        -- หน่วงเวลา 0.1 วินาทีตามที่ต้องการ
-        task.wait(0.1)
-        
-        local char = localPlayer.Character
-        if char then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง (ปล่อยให้เกมดึงตัวกลับเองตามธรรมชาติ)
-                hrp.CFrame = targetCFrame
-                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            end
-        end
-        
-        task.wait(1)
-        isProcessing = false
+createSwitchButton(ContentContainer, "⚡ ฟาร์มไข่", getgenv().EggFarm_Active, function(isActive)
+    getgenv().EggFarm_Active = isActive
+    
+    if isActive then
+        print("เปิดระบบฟาร์มไข่แล้ว: รอจนกว่าจะเก็บไอเทมสำเร็จจึงจะวาร์ป")
+    else
+        print("ปิดระบบฟาร์มไข่")
     end
 end)
+
+local targetPosition = Vector3.new(547.18, 71.13, -365.94)
+
+local function onItemSelected()
+    if not getgenv().EggFarm_Active then return end
+
+    print("เก็บไข่สำเร็จ! กำลังดีเลย์ 0.1 วินาทีก่อนวาร์ป...")
+    
+    -- หน่วงเวลา 0.1 วินาทีก่อนทำการวาร์ป
+    task.wait(0.1)
+    
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+        print("วาร์ปไปยังพิกัด: 547.18, 71.13, -365.94 เรียบร้อยแล้ว")
+    end
+end
+
+-- ตัวอย่างการนำไปผูกกับ Event การเก็บไอเทมจริงในเกมของคุณ
+-- itemPrompt.Triggered:Connect(onItemSelected)
