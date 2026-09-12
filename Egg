@@ -283,52 +283,75 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 -- ==========================================
--- ⚙️ ระบบวาร์ปไปพิกัดเป้าหมาย 1 ครั้ง เมื่อเก็บไอเทมเข้าตัว (เปิดค้างไว้แต่จะไม่ทำงานจนกว่าจะเก็บของ)
+-- ⚙️ ระบบวาร์ปไปพิกัดเป้าหมาย 1 ครั้ง เมื่อเก็บไอเทมเข้าตัว (แก้ไขปัญหาตัวจมดินและลอยค้าง)
 -- ==========================================
-local RunService = game:GetService("RunService")
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
--- สร้างปุ่มสวิตช์สำหรับเปิด-ปิดระบบ
 getgenv().Script1_Active = false
 createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (วาร์ปเมื่อเก็บของ)", getgenv().Script1_Active, function(isActive)
     getgenv().Script1_Active = isActive
+    
+    -- คืนค่าสถานะตัวละครทันทีเมื่อกดปิด เพื่อป้องกันอาการตัวจมดินหรือติดขัด
+    local char = localPlayer.Character
+    local humanoid = char and char:FindFirstChild("Humanoid")
+    if not isActive and humanoid then
+        pcall(function()
+            humanoid.PlatformStand = false
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end)
+    end
 end)
 
--- ฟังก์ชันตรวจจับการเก็บไอเทมเข้า Backpack
 local function setupInventoryTrigger()
     local backpack = localPlayer:WaitForChild("Backpack", 5)
     if not backpack then return end
     
-    -- เคลียร์การเชื่อมต่อเก่า (ป้องกัน Event ซ้ำซ้อนเวลาตัวละครเกิดใหม่)
     if _G.BackpackConnection then
         _G.BackpackConnection:Disconnect()
     end
     
     _G.BackpackConnection = backpack.ChildAdded:Connect(function(child)
-        -- เช็คว่าเปิดสวิตช์อยู่ไหม (ถ้าปิดอยู่ จะไม่ทำอะไรเลยแม้จะเก็บของ)
+        -- ถ้าไม่ได้เปิดสวิตช์ จะไม่ทำอะไรเลยทั้งสิ้น (ไม่มีการรันลูปค้างไว้แน่นอน)
         if not getgenv().Script1_Active then return end
         
-        -- หน่วงเวลา 0.1 วินาทีหลังเก็บของ
+        -- หน่วงเวลา 0.1 วินาทีหลังเก็บของเข้ากระเป๋า
         task.wait(0.1)
         
-        -- เช็คสวิตช์อีกรอบกันพลาดขณะรอเวลา
         if not getgenv().Script1_Active then return end
         
         local char = localPlayer.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
+            
             if hrp then
-                -- ทำการวาร์ปไปที่พิกัดเป้าหมาย 1 ครั้ง แล้วปล่อยให้เกมดึงกลับเอง
+                -- ปลดสถานะทางกายภาพชั่วคราวก่อนวาร์ป เพื่อไม่ให้เกมรั้งตัวละครหรือทำให้จมดิน
+                if humanoid then
+                    pcall(function()
+                        humanoid.PlatformStand = true
+                    end)
+                end
+                
+                -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง
                 hrp.CFrame = targetCFrame
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                
+                -- หน่วงสั้นๆ 0.05 วินาทีให้เกมอัปเดตตำแหน่ง แล้วคืนค่าสถานะปกติทันที เพื่อไม่ให้ตัวลอยค้าง
+                task.wait(0.05)
+                if humanoid then
+                    pcall(function()
+                        humanoid.PlatformStand = false
+                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end)
+                end
             end
         end
     end)
 end
 
--- เริ่มต้นรันระบบตรวจจับครั้งแรก
 task.spawn(setupInventoryTrigger)
 
--- รองรับกรณีตัวละครตายแล้วเกิดใหม่ (Backpack จะถูกรีเซ็ตใหม่)
 localPlayer.CharacterAdded:Connect(function(newChar)
     task.wait(1)
     setupInventoryTrigger()
