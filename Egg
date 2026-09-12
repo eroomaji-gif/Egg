@@ -246,6 +246,71 @@ SidebarLayout.Padding = UDim.new(0, 8)
 
 
 
+-- ==========================================
+-- ตัวอย่างการเพิ่มหมวดหมู่ "ข้อมูล" และล็อกหน้าแรก
+-- ==========================================
+
+-- 1. เพิ่มปุ่มหมวดหมู่ที่ 2 สำหรับ "ข้อมูล" ต่อจากปุ่มเดิมใน Sidebar
+local CatBtn2 = Instance.new("TextButton")
+CatBtn2.Name = "Category2"
+CatBtn2.Parent = SidebarFrame
+CatBtn2.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+CatBtn2.Size = UDim2.new(1, 0, 0, 40)
+CatBtn2.Font = Enum.Font.GothamBold
+CatBtn2.Text = "📖 ข้อมูล"
+CatBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+CatBtn2.TextSize = 13
+
+local CatCorner2 = Instance.new("UICorner")
+CatCorner2.CornerRadius = UDim.new(0, 6)
+CatCorner2.Parent = CatBtn2
+
+-- 2. สร้างหน้าต่างเนื้อหาสำหรับหมวดหมู่ "ข้อมูล" (ซ่อนไว้ก่อนเป็นค่าเริ่มต้น)
+local InfoContainer = Instance.new("ScrollingFrame")
+InfoContainer.Name = "InfoContainer"
+InfoContainer.Parent = MainFrame
+InfoContainer.BackgroundTransparency = 1
+InfoContainer.Position = UDim2.new(0, 160, 0, 50)
+InfoContainer.Size = UDim2.new(1, -170, 1, -60)
+InfoContainer.CanvasSize = UDim2.new(0, 0, 0, 600)
+InfoContainer.ScrollBarThickness = 6
+InfoContainer.Visible = false -- ซ่อนไว้ก่อน ให้หน้าแรก (ฆ่า+วาป) เป็นหลักตอนเปิด
+
+local InfoLayout = Instance.new("UIListLayout")
+InfoLayout.Parent = InfoContainer
+InfoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+InfoLayout.Padding = UDim.new(0, 8)
+
+-- กล่องข้อความสำหรับใส่คำอธิบายยาวๆ ล้วนๆ
+local InfoTextLabel = Instance.new("TextLabel")
+InfoTextLabel.Parent = InfoContainer
+InfoTextLabel.BackgroundTransparency = 1
+InfoTextLabel.Size = UDim2.new(1, -10, 0, 500)
+InfoTextLabel.Font = Enum.Font.Gotham
+InfoTextLabel.Text = "ใส่ข้อความอธิบายของคุณตรงนี้...\n(สามารถเว้นบรรทัดและเขียนอธิบายรายละเอียดต่างๆ ได้เต็มที่)"
+InfoTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfoTextLabel.TextSize = 14
+InfoTextLabel.TextWrapped = true
+InfoTextLabel.TextXAlignment = Enum.TextXAlignment.Left
+InfoTextLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+-- 3. ระบบกดสลับหน้าจอระหว่างหมวดหมู่
+CatBtn1.MouseButton1Click:Connect(function()
+    ContentContainer.Visible = true  -- แสดงหน้าแรก
+    InfoContainer.Visible = false    -- ซ่อนหน้าข้อมูล
+end)
+
+CatBtn2.MouseButton1Click:Connect(function()
+    ContentContainer.Visible = false -- ซ่อนหน้าแรก
+    InfoContainer.Visible = true     -- แสดงหน้าข้อมูล
+end)
+
+
+
+
+
+
+
 -- ปุ่มหมวดหมู่ที่ 1 (ฝั่งซ้าย: หมวดหมู่ฆาตกร)
 local CatBtn1 = Instance.new("TextButton")
 CatBtn1.Name = "Category1"
