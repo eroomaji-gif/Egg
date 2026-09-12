@@ -285,34 +285,29 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 -- ==========================================
--- ⚙️ ระบบเปิดค้างไว้รอนิ่งๆ วาร์ป 1 ครั้งเมื่อถือของในมือ
+-- 🥚 ระบบฟาร์มไข่แบบเขียนใหม่ทั้งหมด (รอถือของแล้ววาร์ป 1 ครั้ง)
 -- ==========================================
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
 getgenv().Script1_Active = false
 
-createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่อัตโนมัติ (เปิดรอจนกว่าจะถือของ)", getgenv().Script1_Active, function(isActive)
-    getgenv().Script1_Active = isActive
+createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่ (รอถือของแล้ววาร์ป)", getgenv().Script1_Active, function(state)
+    getgenv().Script1_Active = state
 end)
 
-local function setupHandTrigger()
+local function initSystem()
     local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
     
-    char.ChildAdded:Connect(function(child)
-        -- เช็คเงื่อนไข: เปิดปุ่มค้างไว้ + สิ่งที่เข้ามาเป็น Tool (ถือในมือ)
-        if getgenv().Script1_Active and child:IsA("Tool") then
-            
-            -- ปิดสวิตช์ทันทีให้อัตโนมัติหลังทำงาน 1 รอบ
+    char.ChildAdded:Connect(function(obj)
+        if getgenv().Script1_Active and obj:IsA("Tool") then
             getgenv().Script1_Active = false
             
-            -- หน่วงเวลา 0.1 วินาทีตามที่ขอ
             task.wait(0.1)
             
-            local currentCharacter = localPlayer.Character
-            if currentCharacter then
-                local hrp = currentCharacter:FindFirstChild("HumanoidRootPart")
+            local c = localPlayer.Character
+            if c then
+                local hrp = c:FindFirstChild("HumanoidRootPart")
                 if hrp then
-                    -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง (ปล่อยให้เกมดึงกลับเอง)
                     hrp.CFrame = targetCFrame
                     hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                     hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -322,9 +317,9 @@ local function setupHandTrigger()
     end)
 end
 
-task.spawn(setupHandTrigger)
+task.spawn(initSystem)
 
-localPlayer.CharacterAdded:Connect(function(newChar)
+localPlayer.CharacterAdded:Connect(function()
     task.wait(1)
-    setupHandTrigger()
+    initSystem()
 end)
