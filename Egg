@@ -297,25 +297,6 @@ local player = Players.LocalPlayer
 -- พิกัดเป้าหมายที่คุณต้องการล็อกตัวไว้
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
--- 1. สร้างปุ่มเปิด-ปิดระบบสงครามยื้อพิกัด (ย้ายตำแหน่งมาฝั่งขวา ไม่ทับของเดิม)
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "SafeTugOfWarGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0, 240, 0, 50)
-btn.Position = UDim2.new(1, -270, 0, 140)
-btn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.TextSize = 14
-btn.Font = Enum.Font.GothamBold
-btn.Text = "ยื้อพิกัดเซฟโซน: OFF"
-btn.Parent = screenGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = btn
 
 local isTugActive = false
 
