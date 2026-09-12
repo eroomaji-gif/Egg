@@ -332,48 +332,62 @@ end)
 
 
 -- ==========================================
--- 🥚 ระบบค้นหาไข่ที่มีเอฟเฟกต์วิบวับ / แสงพิเศษ
+-- 🥚 ระบบ ESP ตรวจจับและแสดงตำแหน่งไข่ทั้งหมดในแมพ
 -- ==========================================
-local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
 
-getgenv().EggFarmEffect_Active = false
-createSwitchButton(EggFarmContainer, "🥚 วิ่งหาไข่มีเอฟเฟกต์พิเศษ", getgenv().EggFarmEffect_Active, function(isActive)
-    getgenv().EggFarmEffect_Active = isActive
+getgenv().EggESP_Active = false
+createSwitchButton(EggFarmContainer, "👁️ ESP ไข่ทั้งหมดในแมพ", getgenv().EggESP_Active, function(isActive)
+    getgenv().EggESP_Active = isActive
+    
+    -- ลบ ESP เก่าทิ้งเมื่อปิดสวิตช์
+    local existingFolder = CoreGui:FindFirstChild("EggESPFolder")
+    if existingFolder then
+        existingFolder:Destroy()
+    end
 end)
 
--- ฟังก์ชันค้นหาวัตถุที่มีเอฟเฟกต์ (Particle หรือ Light)
+-- ฟังก์ชันสร้าง BillboardGui แสดงตำแหน่งไข่
 task.spawn(function()
-    while true do
-        task.wait(1) -- เช็ครอบละ 1 วินาที
-        
-        if getgenv().EggFarmEffect_Active then
-            local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    while true:wait(1) do
+        if getgenv().EggESP_Active then
+            local espFolder = CoreGui:FindFirstChild("EggESPFolder")
+            if not espFolder then
+                espFolder = Instance.new("Folder")
+                espFolder.Name = "EggESPFolder"
+                espFolder.Parent = CoreGui
+            else
+                espFolder:ClearAllChildren()
+            end
             
-            if hrp then
-                local targetFound = nil
-                
-                -- วนหาวัตถุทั้งหมดใน Workspace
-                for _, obj in ipairs(Workspace:GetDescendants()) do
-                    if obj:IsA("BasePart") or obj:IsA("Model") then
-                        -- เช็คว่าข้างในมีเอฟเฟกต์ความวิบวับอยู่ไหม (เช่น ParticleEmitter, PointLight, หรือ Highlight)
-                        local hasEffect = obj:FindFirstChildWhichIsA("ParticleEmitter", true) 
-                                       or obj:FindFirstChildWhichIsA("PointLight", true) 
-                                       or obj:FindFirstChildWhichIsA("Highlight", true)
+            -- วนหาวัตถุทั้งหมดใน Workspace
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("BasePart") or obj:IsA("Model") then
+                    local nameLower = string.lower(obj.Name)
+                    -- กรองหาคำว่า "egg" หรือ "ไข่"
+                    if string.find(nameLower, "egg") or string.find(nameLower, "ไข่") then
+                        local primaryPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
                         
-                        if hasEffect then
-                            -- กรองชื่อคร่าวๆ หรือเช็คว่าเป็นโมเดลไข่ (ถ้าต้องการเจาะจง)
-                            targetFound = obj
-                            break
+                        if primaryPart then
+                            -- สร้างป้ายชื่อบอกตำแหน่ง
+                            local bill = Instance.new("BillboardGui")
+                            bill.Name = "ESPTag"
+                            bill.Adornee = primaryPart
+                            bill.Size = UDim2.new(0, 100, 0, 40)
+                            bill.StudsOffset = Vector3.new(0, 2, 0)
+                            bill.AlwaysOnTop = true
+                            bill.Parent = espFolder
+                            
+                            local txt = Instance.new("TextLabel")
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.BackgroundTransparency = 1
+                            txt.Text = "🥚 [" .. obj.Name .. "]"
+                            txt.TextColor3 = Color3.fromRGB(255, 255, 0)
+                            txt.TextStrokeTransparency = 0
+                            txt.Font = Enum.Font.GothamBold
+                            txt.TextSize = 14
+                            txt.Parent = bill
                         end
-                    end
-                end
-                
-                -- ถ้าเจอวัตถุที่มีเอฟเฟกต์ ให้พุ่งตัวไปหาทันที
-                if targetFound then
-                    local targetPos = targetFound:IsA("Model") and targetFound:GetModelCFrame() or targetFound.CFrame
-                    if targetPos then
-                        hrp.CFrame = targetPos + Vector3.new(0, 3, 0) -- วิ่งไปเหนือจุดนั้นเล็กน้อย
                     end
                 end
             end
