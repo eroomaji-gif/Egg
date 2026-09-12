@@ -283,43 +283,43 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 
-
 -- ==========================================
--- 🥚 ระบบฟาร์มไข่แบบเขียนใหม่ทั้งหมด (รอถือของแล้ววาร์ป 1 ครั้ง)
+-- 🥚 ระบบฟาร์มไข่ (เปิดรอนิ่งๆ กดเก็บปึ๊บ หน่วง 0.1 วิ วาร์ป 1 ครั้งแล้วปิดตัวเอง)
 -- ==========================================
 local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
 getgenv().Script1_Active = false
 
-createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่ (รอถือของแล้ววาร์ป)", getgenv().Script1_Active, function(state)
+createSwitchButton(ContentContainer, "🥚 ฟาร์มไข่ (กดเก็บแล้ววาร์ปครั้งเดียว)", getgenv().Script1_Active, function(state)
     getgenv().Script1_Active = state
 end)
 
-local function initSystem()
-    local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-    
-    char.ChildAdded:Connect(function(obj)
-        if getgenv().Script1_Active and obj:IsA("Tool") then
-            getgenv().Script1_Active = false
-            
-            task.wait(0.1)
-            
-            local c = localPlayer.Character
-            if c then
-                local hrp = c:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    hrp.CFrame = targetCFrame
-                    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                end
+local isProcessing = false
+
+-- ดักจับการกดปุ่มเก็บของ (ProximityPrompt) ในเกม
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, playerWhoTriggered)
+    -- ถ้าเปิดสวิตช์อยู่ และเป็นตัวเราเองที่กดเก็บ และระบบไม่ได้กำลังทำงานอยู่
+    if getgenv().Script1_Active and playerWhoTriggered == localPlayer and not isProcessing then
+        isProcessing = true
+        
+        -- ปิดสวิตช์ทันที (ทำงานรอบเดียวจบ)
+        getgenv().Script1_Active = false
+        
+        -- หน่วงเวลา 0.1 วินาทีตามที่ต้องการ
+        task.wait(0.1)
+        
+        local char = localPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- วาร์ปไปพิกัดเป้าหมาย 1 ครั้ง (ปล่อยให้เกมดึงตัวกลับเองตามธรรมชาติ)
+                hrp.CFrame = targetCFrame
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             end
         end
-    end)
-end
-
-task.spawn(initSystem)
-
-localPlayer.CharacterAdded:Connect(function()
-    task.wait(1)
-    initSystem()
+        
+        task.wait(1)
+        isProcessing = false
+    end
 end)
