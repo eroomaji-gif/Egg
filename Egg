@@ -353,6 +353,83 @@ end)
 
 
 
+-- 📌 [ปุ่มที่ 2] เปิดมองทะลุ (ย้ายมาใส่ในหมวดหมู่ฆาตกร)
+-- ==========================================
+getgenv().Script2_Active = false
+createSwitchButton(ContentContainer, "👁️ ตาเทพ", getgenv().Script2_Active, function(isActive)
+    getgenv().Script2_Active = isActive
+    
+    -- 📌 เอามาไว้ข้างในตรงนี้ (พอด้านนอกปิดปุ๊บ ลูปนี้จะทำงานทันที)
+    if not isActive and getgenv().ActiveHighlights then
+        for _, highlight in ipairs(getgenv().ActiveHighlights) do
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+        getgenv().ActiveHighlights = {}
+    end
+end)
+
+
+
+
+
+-- ฟังก์ชันเช็คสี ESP นอกปุ่ม
+local function getESPColor(player)
+    if player.Team and player.Team == localPlayer.Team then
+        return Color3.fromRGB(0, 255, 0) -- สีเขียว (พวกเดียวกัน)
+    end
+    
+    local character = player.Character
+    if character then
+        local backpack = player:FindFirstChild("Backpack")
+        if character:FindFirstChild("Knife") or character:FindFirstChild("Gun") or 
+           (backpack and (backpack:FindFirstChild("Knife") or backpack:FindFirstChild("Gun"))) then
+            return Color3.fromRGB(255, 0, 0) -- สีแดง (อันตราย/ฆาตกร)
+        end
+    end
+    return Color3.fromRGB(255, 255, 255) -- สีขาว (ทั่วไป)
+end
+
+-- ลูปการทำงาน ESP
+task.spawn(function()
+    getgenv().ActiveHighlights = {}
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if not getgenv().Script2_Active then return end
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= localPlayer and not isOwner(player) and player.Character then
+                local character = player.Character
+                if character:FindFirstChild("HumanoidRootPart") then
+                    local highlight = character:FindFirstChild("CustomTeamESP")
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "CustomTeamESP"
+                        highlight.Adornee = character
+                        highlight.OutlineTransparency = 0
+                        highlight.FillTransparency = 0.4
+                        highlight.Parent = character
+                        table.insert(getgenv().ActiveHighlights, highlight)
+                    end
+                    
+                    local targetColor = getESPColor(player)
+                    highlight.FillColor = targetColor
+                    highlight.OutlineColor = targetColor
+                end
+            end
+        end
+    end)
+end)
+
+
+
+
+
+
+
+
+
+
 
 
 -- รันเบื้องหลังแบบอัตโนมัติทันที
