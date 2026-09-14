@@ -1,13 +1,13 @@
--- ==========================================
--- 📌 [ระบบป้องกัน] รายชื่อเจ้าของสคริปต์
--- ==========================================
+-- 📌 [ระบบป้องกัน] รายชื่อเจ้าของสคริปต์ (เพิ่มได้หลายคนโดยใส่ไว้ในตาราง)
 local ProtectedOwners = {
     "Onsenb47162",
     "Agakami_5625",
+    -- อยากเพิ่มใครอีก ก็ใส่ "ชื่อในเกม" หรือ "DisplayName" ต่อท้ายตรงนี้ได้เลย คั่นด้วยคอมม่า (,)
 }
 
 local function isOwner(player)
     if not player then return false end
+    -- วนลูปเช็คว่าชื่อของคนที่รัน ตรงกับใครสักคนในรายชื่อด้านบนไหม
     for _, ownerName in ipairs(ProtectedOwners) do
         if player.Name == ownerName or player.DisplayName == ownerName then
             return true
@@ -15,6 +15,10 @@ local function isOwner(player)
     end
     return false
 end
+
+
+
+
 
 -- ==========================================
 -- 📌 ฟังก์ชันสำเร็จรูปสำหรับสร้างปุ่มสวิตช์แคปซูล
@@ -78,10 +82,10 @@ local function createSwitchButton(parent, titleText, initialState, callback)
 
     local function updateVisual(state)
         if state then
-            KnobCircle.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            KnobCircle.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- เขียว (เปิด)
             KnobCircle.Position = UDim2.new(1, -27, 0.5, -12)
         else
-            KnobCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+            KnobCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- เทา (ปิด)
             KnobCircle.Position = UDim2.new(0, 3, 0.5, -12)
         end
     end
@@ -99,19 +103,26 @@ local function createSwitchButton(parent, titleText, initialState, callback)
     return SwitchFrame
 end
 
+
+
+
+
+
+
 -- ==========================================
--- 📂 โครงสร้าง UI หลัก
+-- 📌 โครงสร้าง UI แบบใหม่ (มีแถบหมวดหมู่ด้านซ้าย + หน้าต่างกว้าง)
 -- ==========================================
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 
+-- ลบ UI เก่าทิ้งก่อน (ถ้ามี)
 local oldGui = playerGui:FindFirstChild("FlexibleMenuGui")
 if oldGui then
     oldGui:Destroy()
 end
 
+-- สร้าง ScreenGui หลัก
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FlexibleMenuGui"
 ScreenGui.Parent = playerGui
@@ -119,7 +130,10 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.DisplayOrder = 9999
 
--- ปุ่มเปิด/ปิด
+
+
+
+-- 1. ปุ่มเปิด/ปิดหน้าต่างเมนู (สี่เหลี่ยมจัตุรัสเล็กๆ พร้อมรูปภาพ)
 local ToggleButton = Instance.new("ImageButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Parent = ScreenGui
@@ -131,29 +145,45 @@ ToggleButton.Active = true
 ToggleButton.Draggable = true
 ToggleButton.Image = "rbxassetid://75925823414835"
 
+-- บังคับโหลดภาพ (Force Preload)
+task.spawn(function()
+    pcall(function()
+        game:GetService("ContentProvider"):PreloadAsync({ToggleButton})
+    end)
+end)
+
 local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.CornerRadius = UDim.new(0, 8)
 ToggleCorner.Parent = ToggleButton
 
--- หน้าต่างหลัก
+
+
+
+-- ==========================================
+-- 2. หน้าต่างหลัก (เปลี่ยนเป็น ImageLabel พร้อมปรับความโปร่งใสระดับกลางๆ)
+-- ==========================================
 local MainFrame = Instance.new("ImageLabel")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-MainFrame.BackgroundTransparency = 1
+MainFrame.BackgroundTransparency = 1 -- ซ่อนพื้นหลังเดิม
 MainFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
 MainFrame.Size = UDim2.new(0, 550, 0, 450)
 MainFrame.Visible = false
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Image = "rbxassetid://75925823414835"
-MainFrame.ImageTransparency = 0.45
+MainFrame.ImageTransparency = 0.45 -- ปรับความโปร่งใสระดับกลางๆ (0.45 กำลังดี มองเห็นเมนูชัดและเห็นรูปสวยๆ)
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = MainFrame
 
--- แถบหัวข้อด้านบน
+
+
+
+
+-- แถบหัวข้อด้านบน (Title Bar)
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Name = "TitleBar"
 TitleBar.Parent = MainFrame
@@ -169,6 +199,7 @@ local TitleCorner = Instance.new("UICorner")
 TitleCorner.CornerRadius = UDim.new(0, 10)
 TitleCorner.Parent = TitleBar
 
+-- ปุ่มปิดหน้าต่าง (กากบาท X)
 local CloseButton = Instance.new("TextButton")
 CloseButton.Name = "CloseButton"
 CloseButton.Parent = TitleBar
@@ -192,7 +223,11 @@ ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Sidebar
+-- ==========================================
+-- 📂 3. ระบบแบ่งสัดส่วน (ซ้าย: หมวดหมู่ | ขวา: พื้นที่ปุ่มฟังก์ชัน)
+-- ==========================================
+
+-- 3.1 แถบหมวดหมู่ฝั่งซ้าย (Sidebar แคบๆ)
 local SidebarFrame = Instance.new("ScrollingFrame")
 SidebarFrame.Name = "SidebarFrame"
 SidebarFrame.Parent = MainFrame
@@ -207,6 +242,10 @@ SidebarLayout.Parent = SidebarFrame
 SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 SidebarLayout.Padding = UDim.new(0, 8)
 
+
+
+
+-- ปุ่มหมวดหมู่ที่ 1 (ฝั่งซ้าย: หมวดหมู่ฆาตกร)
 local CatBtn1 = Instance.new("TextButton")
 CatBtn1.Name = "Category1"
 CatBtn1.Parent = SidebarFrame
@@ -221,7 +260,8 @@ local CatCorner1 = Instance.new("UICorner")
 CatCorner1.CornerRadius = UDim.new(0, 6)
 CatCorner1.Parent = CatBtn1
 
--- Content Container
+
+-- 3.2 พื้นที่แสดงปุ่มฟังก์ชันฝั่งขวา (Container สำหรับหมวดหมู่ฆาตกร)
 local ContentContainer = Instance.new("ScrollingFrame")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
@@ -230,22 +270,26 @@ ContentContainer.Position = UDim2.new(0, 160, 0, 50)
 ContentContainer.Size = UDim2.new(1, -170, 1, -60)
 ContentContainer.CanvasSize = UDim2.new(0, 0, 0, 600)
 ContentContainer.ScrollBarThickness = 6
-ContentContainer.Visible = true
+ContentContainer.Visible = true -- เปิดหน้าต่างนี้เป็นค่าเริ่มต้น
 
 local ContentLayout = Instance.new("UIListLayout")
 ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim2.new(0, 8)
+ContentLayout.Padding = UDim.new(0, 8)
 
--- ==========================================
--- ⚡ ฟังก์ชัน: วิ่งไปพิกัดเป้าหมาย
--- ==========================================
-getgenv().Script1_Active = false
-local walkConnection = nil
+
+
+
+
+
+
+
+
+-- ตัวอย่างโค้ดสร้างปุ่มแคปซูลสำหรับฟังก์ชันเดินไปพิกัด
 local targetPosition = Vector3.new(5662.85, 70.28, -328.14)
+local walkConnection = nil
 
-createSwitchButton(ContentContainer, "⚡ วาปฆ่า", getgenv().Script1_Active, function(isActive)
-    getgenv().Script1_Active = isActive
+createSwitchButton(ContentContainer, "⚡ เดินไปพิกัด", false, function(isActive)
     local char = localPlayer.Character
     local humanoid = char and char:FindFirstChild("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -255,23 +299,21 @@ createSwitchButton(ContentContainer, "⚡ วาปฆ่า", getgenv().Script1
             humanoid:MoveTo(targetPosition)
             if walkConnection then walkConnection:Disconnect() end
             walkConnection = RunService.Heartbeat:Connect(function()
-                if not getgenv().Script1_Active then 
-                    if walkConnection then walkConnection:Disconnect() end
-                    return
-                end
                 local currentChars = localPlayer.Character
                 if not currentChars then return end
                 local curHrp = currentChars:FindFirstChild("HumanoidRootPart")
                 local curHum = currentChars:FindFirstChild("Humanoid")
+                
                 if curHrp and curHum then
                     local dist = (Vector3.new(targetPosition.X, curHrp.Position.Y, targetPosition.Z) - curHrp.Position).Magnitude
+                    
                     if dist < 4 then
                         curHum:MoveTo(curHrp.Position)
-                        getgenv().Script1_Active = false
                         if walkConnection then walkConnection:Disconnect() end
                         return
                     end
-                    if math.random() < 0.05 then 
+                    
+                    if math.random() < 0.05 then
                         curHum:MoveTo(targetPosition)
                     end
                 end
@@ -285,136 +327,5 @@ createSwitchButton(ContentContainer, "⚡ วาปฆ่า", getgenv().Script1
     end
 end)
 
--- ==========================================
--- ⚡ ฟังก์ชัน: ยื้อพิกัดเซฟโซน
--- ==========================================
-getgenv().Script2_Active = false
-local targetCFrame = CFrame.new(547.18, 71.13, -365.94)
 
-createSwitchButton(ContentContainer, "⚡ ยื้อพิกัดเซฟโซน", getgenv().Script2_Active, function(isActive)
-    getgenv().Script2_Active = isActive
-    local char = localPlayer.Character
-    local humanoid = char and char:FindFirstChild("Humanoid")
-    if not isActive and humanoid then
-        pcall(function()
-            humanoid.PlatformStand = false
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-        end)
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if not getgenv().Script2_Active then return end
-    local char = localPlayer.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
-    if hrp and humanoid then
-        hrp.CFrame = targetCFrame
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        if humanoid.PlatformStand == false then
-            humanoid.PlatformStand = true
-        end
-    end
-end)
-
--- ==========================================
--- ⚡ ฟังก์ชัน: Instant ProximityPrompt (กดปุ๊บติดปั๊บ)
--- ==========================================
-local ProximityPromptService = game:GetService("ProximityPromptService")
-local function instantPrompt(prompt)
-    if prompt:IsA("ProximityPrompt") then
-        prompt.HoldDuration = 0
-    end
-end
-
-for _, v in ipairs(workspace:GetDescendants()) do
-    instantPrompt(v)
-end
-
-workspace.DescendantAdded:Connect(instantPrompt)
-
--- ==========================================
--- ⚡ ฟังก์ชัน: เดินกลางอากาศ (AirWalk)
--- ==========================================
-getgenv().AirWalkActive = false
-local currentPlatform = nil
-
-local oldAirWalkGui = playerGui:FindFirstChild("AirWalkGui")
-if oldAirWalkGui then oldAirWalkGui:Destroy() end
-
-local AirWalkGui = Instance.new("ScreenGui")
-AirWalkGui.Name = "AirWalkGui"
-AirWalkGui.Parent = playerGui
-AirWalkGui.ResetOnSpawn = false
-AirWalkGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-AirWalkGui.DisplayOrder = 9999
-
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Name = "ToggleBtn"
-ToggleBtn.Parent = AirWalkGui
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-ToggleBtn.Position = UDim2.new(0.8, 0, 0.25, 0)
-ToggleBtn.Size = UDim2.new(0, 140, 0, 55)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.Text = "☁️ เดินกลางอากาศ: OFF"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 13
-ToggleBtn.Active = true
-ToggleBtn.Draggable = true
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    getgenv().AirWalkActive = not getgenv().AirWalkActive
-    if getgenv().AirWalkActive then
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        ToggleBtn.Text = "☁️ เดินกลางอากาศ: ON"
-    else
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        ToggleBtn.Text = "☁️ เดินกลางอากาศ: OFF"
-        if currentPlatform then
-            currentPlatform:Destroy()
-            currentPlatform = nil
-        end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if getgenv().AirWalkActive then
-        pcall(function()
-            local char = localPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local rootPart = char.HumanoidRootPart
-                local raycastParams = RaycastParams.new()
-                raycastParams.FilterDescendantsInstances = {char}
-                raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-                
-                local raycastResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -4.5, 0), raycastParams)
-                if not raycastResult then
-                    if not currentPlatform or not currentPlatform.Parent then
-                        currentPlatform = Instance.new("Part")
-                        currentPlatform.Name = "AirWalkPlatform"
-                        currentPlatform.Size = Vector3.new(4, 0.5, 4)
-                        currentPlatform.Anchored = true
-                        currentPlatform.CanCollide = true
-                        currentPlatform.Transparency = 0.5
-                        currentPlatform.BrickColor = BrickColor.new("Institutional white")
-                        currentPlatform.Parent = workspace
-                    end
-                    currentPlatform.Position = rootPart.Position - Vector3.new(0, 3.5, 0)
-                else
-                    if currentPlatform then
-                        currentPlatform:Destroy()
-                        currentPlatform = nil
-                    end
-                end
-            end
-        end)
-    else
-        if currentPlatform then
-            currentPlatform:Destroy()
-            currentPlatform = nil
-        end
-    end
-end)
 
