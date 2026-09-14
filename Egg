@@ -285,11 +285,16 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 
--- ตัวอย่างโค้ดสร้างปุ่มแคปซูลสำหรับฟังก์ชันเดินไปพิกัด
-local targetPosition = Vector3.new(5662.85, 70.28, -328.14)
-local walkConnection = nil
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
 
-createSwitchButton(ContentContainer, "⚡ เดินไปพิกัด", false, function(isActive)
+local targetPosition = Vector3.new(5662.85, 70.28, -328.14) -- พิกัดเป้าหมาย
+local walkConnection = nil
+local walkSwitch = nil
+local lastMoveCall = 0
+
+walkSwitch = createSwitchButton(ContentContainer, "⚡ วาปฆ่า (เดินจนถึง)", false, function(isActive)
     local char = localPlayer.Character
     local humanoid = char and char:FindFirstChild("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -297,6 +302,8 @@ createSwitchButton(ContentContainer, "⚡ เดินไปพิกัด", fa
     if isActive then
         if humanoid and hrp then
             humanoid:MoveTo(targetPosition)
+            lastMoveCall = tick()
+            
             if walkConnection then walkConnection:Disconnect() end
             walkConnection = RunService.Heartbeat:Connect(function()
                 local currentChars = localPlayer.Character
@@ -307,25 +314,32 @@ createSwitchButton(ContentContainer, "⚡ เดินไปพิกัด", fa
                 if curHrp and curHum then
                     local dist = (Vector3.new(targetPosition.X, curHrp.Position.Y, targetPosition.Z) - curHrp.Position).Magnitude
                     
+                    -- ถ้าถึงเป้าหมายแล้ว ให้หยุดและปิดสวิตช์เอง
                     if dist < 4 then
                         curHum:MoveTo(curHrp.Position)
                         if walkConnection then walkConnection:Disconnect() end
+                        walkConnection = nil
+                        if walkSwitch then
+                            walkSwitch.SetState(false, false)
+                        end
                         return
                     end
                     
-                    if math.random() < 0.05 then
+                    -- สั่งรีเฟรช MoveTo ทุกๆ 1.5 วินาที ไม่ให้ Time-out และเดินต่อยาวๆ จนถึง
+                    if tick() - lastMoveCall >= 1.5 then
                         curHum:MoveTo(targetPosition)
+                        lastMoveCall = tick()
                     end
                 end
             end)
         end
     else
-        if walkConnection then walkConnection:Disconnect() end
+        if walkConnection then 
+            walkConnection:Disconnect() 
+            walkConnection = nil
+        end
         if humanoid and hrp then
             humanoid:MoveTo(hrp.Position)
         end
     end
 end)
-
-
-
