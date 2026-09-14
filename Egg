@@ -190,7 +190,7 @@ TitleBar.Parent = MainFrame
 TitleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.Font = Enum.Font.GothamBold
-TitleBar.Text = "  🤪 KTO CRUB KILL LER "
+TitleBar.Text = "  🥚 KTO CRUB Jigkhi "
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleBar.TextSize = 15
 TitleBar.TextXAlignment = Enum.TextXAlignment.Left
@@ -252,7 +252,7 @@ CatBtn1.Parent = SidebarFrame
 CatBtn1.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 CatBtn1.Size = UDim2.new(1, 0, 0, 40)
 CatBtn1.Font = Enum.Font.GothamBold
-CatBtn1.Text = "🔪 ฆ่า+วาป"
+CatBtn1.Text = "🥚 วาป"
 CatBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
 CatBtn1.TextSize = 13
 
