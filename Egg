@@ -289,6 +289,10 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 
 
+getgenv().Script1_Active = false
+createSwitchButton(ContentContainer, "⚡ วาปฆ่า", getgenv().Script1_Active, function(isActive)
+    getgenv().Script1_Active = isActive
+end)
 
 
 local Players = game:GetService("Players")
@@ -300,15 +304,6 @@ local targetPosition = Vector3.new(5662.85, 70.28, -328.14)
 
 
 
-
-btn.MouseButton1Click:Connect(function()
-	isWalking = not isWalking
-	local char = player.Character
-	local humanoid = char and char:FindFirstChild("Humanoid")
-	
-	if isWalking then
-		btn.Text = "วิ่งไปพิกัด (แบบเสถียร): ON"
-		btn.BackgroundColor3 = Color3.fromRGB(41, 128, 185)
 		
 		if humanoid then
 			-- สั่งเดินไปหาเป้าหมายครั้งแรก
@@ -348,9 +343,7 @@ btn.MouseButton1Click:Connect(function()
 			end)
 		end
 	else
-		isWalking = false
-		btn.Text = "วิ่งไปพิกัด (แบบเสถียร): OFF"
-		btn.BackgroundColor3 = Color3.fromRGB(39, 174, 96)
+		
 		
 		if walkConnection then walkConnection:Disconnect() end
 		if humanoid then
