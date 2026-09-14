@@ -3,7 +3,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- พิกัดเป้าหมายที่คุณต้องการวิ่งไป
-local targetPosition = Vector3.new(4797.52, 71.13, -330.78)
+local targetPosition = Vector3.new(5662.85, 70.28, -328.14)
 
 -- สร้าง GUI ปุ่มกดฝั่งขวา (ไม่ทับของเดิม)
 local screenGui = Instance.new("ScreenGui")
