@@ -294,7 +294,7 @@ local walkConnection = nil
 local walkSwitch = nil
 local lastMoveCall = 0
 
-walkSwitch = createSwitchButton(ContentContainer, "⚡ วาปฆ่า (เดินจนถึง)", false, function(isActive)
+walkSwitch = createSwitchButton(ContentContainer, "⚡ วิ่งไปด่านท้าย", false, function(isActive)
     local char = localPlayer.Character
     local humanoid = char and char:FindFirstChild("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
