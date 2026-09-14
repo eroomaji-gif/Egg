@@ -349,6 +349,44 @@ end)
 
 
 
+local ProximityPromptService = Service("ProximityPromptService") -- หรือ game:GetService("ProximityPromptService")
+
+-- ตัวแปรเก็บ Connection เพื่อเอาไว้ Disconnect ไม่ให้มันดักซ้ำซ้อน
+local promptConnection = nil
+
+-- ฟังก์ชันสำหรับเปิดใช้งาน 1 ครั้งแล้วปิด
+local function triggerAndAutoOff()
+	-- 1. สั่งเปิดระบบยื้อพิกัด
+	if not isTugActive then
+		isTugActive = true
+		btn.Text = "ยื้อพิกัดเซฟโซน: ON (หลบรีเซิร์ฟ)"
+		btn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+	end
+
+	-- 2. ตั้งเวลาให้มันทำงาน 1 ครั้งแล้วปิดตัวเองอัตโนมัติ (เช่น ทำงานค้างไว้ 2 วินาที หรือปรับตามที่ต้องการ แล้วสั่ง OFF)
+	task.delay(2, function() -- เลข 2 คือจำนวนวินาทีที่ต้องการให้ยื้อไว้ (ปรับเปลี่ยนได้)
+		isTugActive = false
+		btn.Text = "ยื้อพิกัดเซฟโซน: OFF"
+		btn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+		
+		local char = player.Character
+		local humanoid = char and char:FindFirstChild("Humanoid")
+		if humanoid then
+			pcall(function()
+				humanoid.PlatformStand = false
+				humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+			end)
+		end
+	end)
+end
+
+-- ดักจับการกด ProximityPrompt
+promptConnection = ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
+	-- เช็คว่าเป็นตัวเราเองที่เป็นคนกดไหม
+	if triggeringPlayer == player then
+		triggerAndAutoOff()
+	end
+end)
 
 
 
